@@ -1,10 +1,9 @@
 const express = require('express');
 const app = express();
 const port = process.env.PORT || 4000;
-const db = require('./firebase'); // Your Firebase configuration file
+const db = require('./firebase'); 
 
 app.use(express.json());
-
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -12,7 +11,7 @@ app.listen(port, () => {
 
 // Add a new user (with height and current weight)
 app.post('/api/users', async (req, res) => {
-    const { uid, name, surname, height, currentWeight } = req.body; // Expecting uid from Firebase Auth
+    const { uid, name, surname, height, weight, gender } = req.body; // Expecting uid from Firebase Auth
 
     try {
         const userRef = db.collection('users').doc(uid); // Use uid as document ID
@@ -21,7 +20,7 @@ app.post('/api/users', async (req, res) => {
             surname: surname,
             created: new Date(),
             height: height,
-            currentWeight: currentWeight,
+            weight: weight,
             gender: gender
         });
         res.status(201).json({ message: 'User added successfully' });
@@ -48,7 +47,6 @@ app.put('/api/users/:userId/profile', async (req, res) => {
 });
 
 // Add weight progress (to track changes over time)
-// Use the date as the document ID
 app.post('/api/users/:userId/weight-progress', async (req, res) => {
     const { weight } = req.body; // No need for date; use it as the document ID
     const { userId } = req.params;
