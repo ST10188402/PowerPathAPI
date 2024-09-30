@@ -28,7 +28,7 @@ app.post('/api/users', async (req, res) => {
         });
         res.status(201).json({ message: 'User added successfully' });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to add user' });
+        res.status(500).json({ error: 'Failed to add user API Response' });
     }
 });
 
