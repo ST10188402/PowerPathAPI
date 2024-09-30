@@ -14,14 +14,14 @@ app.listen(port, () => {
 
 // Add a new user (with height and current weight)
 app.post('/api/users', async (req, res) => {
-    const { uid, name, surname, height, weight, gender } = req.body; // Expecting uid from Firebase Auth
+    const { uid, name, surname, height, weight, gender, created } = req.body; // Expecting uid from Firebase Auth
 
     try {
         const userRef = db.collection('users').doc(uid); // Use uid as document ID
         await userRef.set({
             name: name,
             surname: surname,
-            created: new Date(),
+            created: created,
             height: height,
             weight: weight,
             gender: gender
