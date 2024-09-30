@@ -33,7 +33,7 @@ app.get('/api/users/:userId', async (req, res) => {
 
 // Add a new user (with height and current weight)
 app.post('/api/users', async (req, res) => {
-    const { uid, name, surname, height, weight, gender, created } = req.body; // Expecting uid from Firebase Auth
+    const { uid, name, surname, height, weight, gender, created, dateOfBirth } = req.body; // Expecting uid from Firebase Auth
 
     try {
         const userRef = db.collection('users').doc(uid); // Use uid as document ID
@@ -43,7 +43,8 @@ app.post('/api/users', async (req, res) => {
             created: created,
             height: height,
             weight: weight,
-            gender: gender
+            gender: gender,
+            dateOfBirth: dateOfBirth
         });
         res.status(201).json({ message: 'User added successfully' });
     } catch (error) {
