@@ -2,8 +2,12 @@ const express = require('express');
 const app = express();
 const port = process.env.PORT || 4000;
 const db = require('./firebase'); 
+const cors = require('cors');
+app.use(cors());
 
 app.use(express.json());
+
+app.use(bodyparser.json());
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
