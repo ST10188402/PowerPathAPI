@@ -1,0 +1,20 @@
+{
+  "name": "powerpathapi",
+  "version": "1.0.0",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "dev": "nodemon server.js",
+    "deploy": "firebase deploy --only functions:Api"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": "",
+  "dependencies": {
+    "body-parser": "^1.20.3",
+    "express": "^4.21.0",
+    "firebase-admin": "^12.5.0",
+    "firebase-functions": "^6.0.1"
+  }
+}
