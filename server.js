@@ -12,6 +12,25 @@ app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
 
+// Get user by userId
+app.get('/api/users/:userId', async (req, res) => {
+    const { userId } = req.params;
+
+    try {
+        const userRef = db.collection('users').doc(userId);
+        const doc = await userRef.get();
+        
+        if (!doc.exists) {
+            return res.status(404).json({ error: 'User not found' });
+        }
+
+        const userData = doc.data();
+        res.status(200).json(userData);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve user' });
+    }
+});
+
 // Add a new user (with height and current weight)
 app.post('/api/users', async (req, res) => {
     const { uid, name, surname, height, weight, gender, created } = req.body; // Expecting uid from Firebase Auth
