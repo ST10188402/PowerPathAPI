@@ -325,3 +325,22 @@ app.post('/api/users/:userId/workouts/:workoutId/progress', async (req, res) => 
     }
 });
 
+// Add weight progress (to track changes over time)
+app.post('/api/users/:userId/weight-progress', async (req, res) => {
+    const { weight } = req.body; // No need for date; use it as the document ID
+    const { userId } = req.params;
+
+    // Use today's date as the document ID in the format YYYY-MM-DD
+    const date = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
+
+    try {
+        const weightProgressRef = db.collection('users').doc(userId).collection('weight-progress').doc(date);
+        await weightProgressRef.set({
+            weight: weight,
+        });
+        res.status(201).json({ id: date, message: 'Weight progress added successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add weight progress' });
+    }
+});
+
