@@ -250,6 +250,33 @@ app.post('/api/users/:userId/workouts/:workoutId/history', async (req, res) => {
     }
 });
 
+// Get workout progress for a specific muscle group
+app.get('/api/users/:userId/workouts/progress', async (req, res) => {
+    const { userId } = req.params;
+    const { muscleGroup } = req.query;
+
+    try {
+        const workoutsSnapshot = await db.collection('users').doc(userId).collection('workouts')
+            .where('muscleGroup', '==', muscleGroup).get();
+
+        if (workoutsSnapshot.empty) {
+            return res.status(404).json({ error: 'No workouts found for the specified muscle group' });
+        }
+
+        const progressPromises = workoutsSnapshot.docs.map(async (workoutDoc) => {
+            const progressSnapshot = await workoutDoc.ref.collection('workout-progress').get();
+            return progressSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        });
+
+        const progressResults = await Promise.all(progressPromises);
+        const workoutProgress = progressResults.flat();
+
+        res.status(200).json(workoutProgress);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve workout progress' });
+    }
+});
+
 // Get workout history
 app.get('/api/users/:userId/workouts/:workoutId/history', async (req, res) => {
     const { userId, workoutId } = req.params;
