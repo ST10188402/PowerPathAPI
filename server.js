@@ -174,7 +174,7 @@ app.post('/api/users/:userId/workouts', async (req, res) => {
     try {
         const workoutRef = await db.collection('users').doc(userId).collection('workouts').add({
             exercises: exercises,
-            muscleGroup: muscleGroup
+            muscleGroup: muscleGroup,
             name: name
         });
         res.status(201).json({ id: workoutRef.id, message: 'Workout added successfully' });
