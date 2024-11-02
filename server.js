@@ -250,6 +250,36 @@ app.post('/api/users/:userId/workouts/:workoutId/history', async (req, res) => {
     }
 });
 
+// Get workout history
+app.get('/api/users/:userId/workouts/:workoutId/history', async (req, res) => {
+    const { userId, workoutId } = req.params;
+    try {
+        const historySnapshot = await db.collection('users').doc(userId).collection('workouts').doc(workoutId).collection('history').get();
+        const history = historySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        res.status(200).json(history);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to retrieve workout history' });
+    }
+});
+
+// Add workout progress to the progress subcollection of a workout
+app.post('/api/users/:userId/workouts/:workoutId/progress', async (req, res) => {
+    const { userId, workoutId } = req.params;
+    const { date, sets, reps, weight } = req.body;
+
+    try {
+        const progressRef = await db.collection('users').doc(userId).collection('workouts').doc(workoutId).collection('progress').add({
+            date: date,
+            sets: sets,
+            reps: reps,
+            weight: weight
+        });
+        res.status(201).json({ id: progressRef.id, message: 'Workout progress added successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add workout progress' });
+    }
+});
+
 // Get workout progress for a specific muscle group
 app.get('/api/users/:userId/workouts/progress', async (req, res) => {
     const { userId } = req.params;
@@ -264,7 +294,7 @@ app.get('/api/users/:userId/workouts/progress', async (req, res) => {
         }
 
         const progressPromises = workoutsSnapshot.docs.map(async (workoutDoc) => {
-            const progressSnapshot = await workoutDoc.ref.collection('workout-progress').get();
+            const progressSnapshot = await workoutDoc.ref.collection('progress').get();
             return progressSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         });
 
@@ -277,14 +307,21 @@ app.get('/api/users/:userId/workouts/progress', async (req, res) => {
     }
 });
 
-// Get workout history
-app.get('/api/users/:userId/workouts/:workoutId/history', async (req, res) => {
+// Add workout progress to the progress subcollection of a workout
+app.post('/api/users/:userId/workouts/:workoutId/progress', async (req, res) => {
     const { userId, workoutId } = req.params;
+    const { date, sets, reps, weight } = req.body;
+
     try {
-        const historySnapshot = await db.collection('users').doc(userId).collection('workouts').doc(workoutId).collection('history').get();
-        const history = historySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        res.status(200).json(history);
+        const progressRef = await db.collection('users').doc(userId).collection('workouts').doc(workoutId).collection('progress').add({
+            date: date,
+            sets: sets,
+            reps: reps,
+            weight: weight
+        });
+        res.status(201).json({ id: progressRef.id, message: 'Workout progress added successfully' });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to retrieve workout history' });
+        res.status(500).json({ error: 'Failed to add workout progress' });
     }
 });
+
