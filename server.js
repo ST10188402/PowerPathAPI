@@ -4,10 +4,7 @@ const port = process.env.PORT || 4000;
 const db = require('./firebase'); 
 const cors = require('cors');
 app.use(cors());
-
-
 app.use(express.json());
-
 
 app.listen(port, () => {
     console.log(`Server is running on port ${port}`);
@@ -132,15 +129,22 @@ app.post('/api/users/:userId/exercises', async (req, res) => {
 // Get all exercises for the user
 app.get('/api/users/:userId/exercises', async (req, res) => {
     const { userId } = req.params;
+    const { muscleGroup } = req.query;
+
     try {
-        const exercisesSnapshot = await db.collection('users').doc(userId).collection('exercises').get();
+        let exercisesSnapshot;
+        if (muscleGroup) {
+            exercisesSnapshot = await db.collection('users').doc(userId).collection('exercises')
+                .where('muscleGroup', '==', muscleGroup).get();
+        } else {
+            exercisesSnapshot = await db.collection('users').doc(userId).collection('exercises').get();
+        }
         const exercises = exercisesSnapshot.docs.map(doc => doc.data());
         res.status(200).json(exercises);
     } catch (error) {
         res.status(500).json({ error: 'Failed to retrieve exercises' });
     }
 });
-
 
 // Update an existing exercise for the user
 app.put('/api/users/:userId/exercises/:exerciseId', async (req, res) => {
@@ -175,7 +179,6 @@ app.post('/api/users/:userId/workouts', async (req, res) => {
     try {
         const workoutRef = await db.collection('users').doc(userId).collection('workouts').add({
             exercises: exercises,
-            muscleGroup: muscleGroup,
             name: name
         });
         res.status(201).json({ id: workoutRef.id, message: 'Workout added successfully' });
@@ -281,6 +284,23 @@ app.post('/api/users/:userId/workouts/:workoutId/progress', async (req, res) => 
     }
 });
 
+// Add a new workout for a specific exercise of the user
+app.post('/api/users/:userId/exercises/:exerciseId/workouts', async (req, res) => {
+    const { userId, exerciseId } = req.params;
+    const { name, muscleGroup, exercises } = req.body;
+
+    try {
+        const workoutRef = await db.collection('users').doc(userId).collection('exercises').doc(exerciseId).collection('workouts').add({
+            name: name,
+            muscleGroup: muscleGroup,
+            exercises: exercises
+        });
+        res.status(201).json({ id: workoutRef.id, message: 'Workout added successfully' });
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to add workout' });
+    }
+});
+
 // Get workout progress for a specific muscle group
 app.get('/api/users/:userId/workouts/progress', async (req, res) => {
     const { userId } = req.params;
@@ -307,41 +327,3 @@ app.get('/api/users/:userId/workouts/progress', async (req, res) => {
         res.status(500).json({ error: 'Failed to retrieve workout progress' });
     }
 });
-
-// Add workout progress to the progress subcollection of a workout
-app.post('/api/users/:userId/workouts/:workoutId/progress', async (req, res) => {
-    const { userId, workoutId } = req.params;
-    const { date, sets, reps, weight } = req.body;
-
-    try {
-        const progressRef = await db.collection('users').doc(userId).collection('workouts').doc(workoutId).collection('progress').add({
-            date: date,
-            sets: sets,
-            reps: reps,
-            weight: weight
-        });
-        res.status(201).json({ id: progressRef.id, message: 'Workout progress added successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to add workout progress' });
-    }
-});
-
-// Add weight progress (to track changes over time)
-app.post('/api/users/:userId/weight-progress', async (req, res) => {
-    const { weight } = req.body; // No need for date; use it as the document ID
-    const { userId } = req.params;
-
-    // Use today's date as the document ID in the format YYYY-MM-DD
-    const date = new Date().toISOString().split('T')[0]; // Get current date in YYYY-MM-DD format
-
-    try {
-        const weightProgressRef = db.collection('users').doc(userId).collection('weight-progress').doc(date);
-        await weightProgressRef.set({
-            weight: weight,
-        });
-        res.status(201).json({ id: date, message: 'Weight progress added successfully' });
-    } catch (error) {
-        res.status(500).json({ error: 'Failed to add weight progress' });
-    }
-});
-
