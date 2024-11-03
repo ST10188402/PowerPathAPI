@@ -134,12 +134,13 @@ app.get('/api/users/:userId/exercises', async (req, res) => {
     const { userId } = req.params;
     try {
         const exercisesSnapshot = await db.collection('users').doc(userId).collection('exercises').get();
-        const exercises = exercisesSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        const exercises = exercisesSnapshot.docs.map(doc => doc.data());
         res.status(200).json(exercises);
     } catch (error) {
         res.status(500).json({ error: 'Failed to retrieve exercises' });
     }
 });
+
 
 // Update an existing exercise for the user
 app.put('/api/users/:userId/exercises/:exerciseId', async (req, res) => {
