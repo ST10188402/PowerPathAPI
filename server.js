@@ -188,10 +188,10 @@ app.post('/api/users/:userId/workouts', async (req, res) => {
 });
 
 // Get all workouts for the user
-app.get('/api/users/:userId/workouts', async (req, res) => {
-    const { userId } = req.params;
+app.get('/api/users/:userId/exercises/:exerciseId/workouts', async (req, res) => {
+    const { userId, exerciseId } = req.params;
     try {
-        const workoutsSnapshot = await db.collection('users').doc(userId).collection('workouts').get();
+        const workoutsSnapshot = await db.collection('users').doc(userId).collection('exercises').doc(exerciseId).collection('workouts').get();
         const workouts = workoutsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         res.status(200).json(workouts);
     } catch (error) {
@@ -287,13 +287,13 @@ app.post('/api/users/:userId/workouts/:workoutId/progress', async (req, res) => 
 // Add a new workout for a specific exercise of the user
 app.post('/api/users/:userId/exercises/:exerciseId/workouts', async (req, res) => {
     const { userId, exerciseId } = req.params;
-    const { name, muscleGroup, exercises } = req.body;
+    const { name, sets, reps } = req.body;
 
     try {
         const workoutRef = await db.collection('users').doc(userId).collection('exercises').doc(exerciseId).collection('workouts').add({
             name: name,
-            muscleGroup: muscleGroup,
-            exercises: exercises
+            sets: sets,
+            reps: reps
         });
         res.status(201).json({ id: workoutRef.id, message: 'Workout added successfully' });
     } catch (error) {
