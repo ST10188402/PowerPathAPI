@@ -111,7 +111,25 @@ app.delete('/api/users/:userId/weight-progress/:progressId', async (req, res) =>
     }
 });
 
+
 // Add a new exercise for the user
+app.post('/api/users/:userId/exercises', async (req, res) => {
+    const { name, muscleGroup } = req.body;
+    const { userId } = req.params;
+    try {
+        // Add the exercise to the exercises subcollection of the user
+        await db.collection('users').doc(userId).collection('exercises').add({
+            name: name,
+            muscleGroup: muscleGroup
+        });
+
+        res.status(201).send({ message: 'Exercise added successfully' });
+    } catch (error) {
+        res.status(500).send({ error: 'Failed to add exercise' });
+    }
+});
+
+// Add a new exercise for the user in workouts
 app.post('/api/users/:userId/workouts', async (req, res) => {
     const { exercises, name, muscleGroup } = req.body;
     const { userId } = req.params;
