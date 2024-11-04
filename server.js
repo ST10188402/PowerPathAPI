@@ -112,17 +112,27 @@ app.delete('/api/users/:userId/weight-progress/:progressId', async (req, res) =>
 });
 
 // Add a new exercise for the user
-app.post('/api/users/:userId/exercises', async (req, res) => {
-    const { name, muscleGroup } = req.body;
+app.post('/api/users/:userId/workouts', async (req, res) => {
+    const { exercises, name, muscleGroup } = req.body;
     const { userId } = req.params;
     try {
-        const exerciseRef = await db.collection('users').doc(userId).collection('exercises').add({
+        // Add the workout to the workouts collection
+        const workoutRef = await db.collection('users').doc(userId).collection('workouts').add({
             name: name,
             muscleGroup: muscleGroup
         });
-        res.status(201).json({ id: exerciseRef.id, message: 'Exercise added successfully' });
+
+        // Add each exercise to the exercises subcollection within the workout
+        const batch = db.batch();
+        exercises.forEach(exercise => {
+            const exerciseRef = workoutRef.collection('exercises').doc();
+            batch.set(exerciseRef, exercise);
+        });
+        await batch.commit();
+
+        res.status(201).json({ id: workoutRef.id, message: 'Workout and exercises added successfully' });
     } catch (error) {
-        res.status(500).json({ error: 'Failed to add exercise' });
+        res.status(500).json({ error: 'Failed to add workout and exercises' });
     }
 });
 
@@ -188,10 +198,10 @@ app.post('/api/users/:userId/workouts', async (req, res) => {
 });
 
 // Get all workouts for the user
-app.get('/api/users/:userId/exercises/:exerciseId/workouts', async (req, res) => {
+app.get('/api/users/:userId/workouts', async (req, res) => {
     const { userId, exerciseId } = req.params;
     try {
-        const workoutsSnapshot = await db.collection('users').doc(userId).collection('exercises').doc(exerciseId).collection('workouts').get();
+        const workoutsSnapshot = await db.collection('users').doc(userId).collection('workouts').doc(exerciseId).get();
         const workouts = workoutsSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         res.status(200).json(workouts);
     } catch (error) {
